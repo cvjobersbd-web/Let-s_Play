@@ -1,10 +1,12 @@
-// pages/Register.jsx (updated with SVG icons instead of emojis)
 import { useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Register = () => {
   const { language } = useLanguage();
+  const { register, registerWithGoogle, error, setError } = useAuth();
+  const navigate = useNavigate();
   const [form, setForm] = useState({ 
     name: '', 
     email: '', 
@@ -15,6 +17,8 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [localError, setLocalError] = useState('');
 
   const t = {
     bn: {
@@ -39,6 +43,8 @@ const Register = () => {
       passwordMismatch: 'পাসওয়ার্ড মিলছে না',
       passwordMin: 'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে',
       required: 'এই ফিল্ডটি পূরণ করা আবশ্যক',
+      registerSuccess: 'অ্যাকাউন্ট তৈরি সফল!',
+      registerError: 'অ্যাকাউন্ট তৈরি ব্যর্থ হয়েছে। আবার চেষ্টা করুন।',
     },
     en: {
       title: 'Create Account',
@@ -62,11 +68,12 @@ const Register = () => {
       passwordMismatch: 'Passwords do not match',
       passwordMin: 'Password must be at least 6 characters',
       required: 'This field is required',
+      registerSuccess: 'Account created successfully!',
+      registerError: 'Registration failed. Please try again.',
     }
   };
 
   const text = t[language];
-
   const [errors, setErrors] = useState({});
 
   const validateForm = () => {
@@ -85,17 +92,40 @@ const Register = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validateForm()) {
-      console.log('Register attempt:', form);
-      // Handle registration logic here
+    setLocalError('');
+    setError(null);
+    
+    if (!validateForm()) return;
+
+    setLoading(true);
+
+    try {
+      await register(form.email, form.password, form.name);
+      navigate('/');
+    } catch (err) {
+      setLocalError(text.registerError);
+      console.error('Registration error:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleGoogleRegister = () => {
-    // Handle Google registration logic here
-    console.log('Google register clicked');
+  const handleGoogleRegister = async () => {
+    setLoading(true);
+    setLocalError('');
+    setError(null);
+
+    try {
+      await registerWithGoogle();
+      navigate('/');
+    } catch (err) {
+      setLocalError(text.registerError);
+      console.error('Google registration error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -126,6 +156,13 @@ const Register = () => {
             <p className="text-[#6B5F8A] text-sm">{text.subtitle}</p>
           </div>
 
+          {/* Error Display */}
+          {(localError || error) && (
+            <div className="mb-4 p-3 bg-[rgba(233,30,140,0.15)] border border-[#E91E8C] rounded-xl text-[#E91E8C] text-sm text-center">
+              {localError || error}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Full Name */}
             <div>
@@ -141,6 +178,7 @@ const Register = () => {
                   errors.name ? 'border-[#E91E8C]' : 'border-[rgba(255,255,255,0.08)]'
                 } rounded-xl px-4 py-3 text-white text-sm placeholder-[#4A3F5E] focus:outline-none focus:border-[#E91E8C] focus:ring-2 focus:ring-[#E91E8C]/20 transition-all duration-200`}
                 required
+                disabled={loading}
               />
               {errors.name && <p className="text-[#E91E8C] text-xs mt-1">{errors.name}</p>}
             </div>
@@ -159,6 +197,7 @@ const Register = () => {
                   errors.email ? 'border-[#E91E8C]' : 'border-[rgba(255,255,255,0.08)]'
                 } rounded-xl px-4 py-3 text-white text-sm placeholder-[#4A3F5E] focus:outline-none focus:border-[#E91E8C] focus:ring-2 focus:ring-[#E91E8C]/20 transition-all duration-200`}
                 required
+                disabled={loading}
               />
               {errors.email && <p className="text-[#E91E8C] text-xs mt-1">{errors.email}</p>}
             </div>
@@ -177,6 +216,7 @@ const Register = () => {
                   errors.phone ? 'border-[#E91E8C]' : 'border-[rgba(255,255,255,0.08)]'
                 } rounded-xl px-4 py-3 text-white text-sm placeholder-[#4A3F5E] focus:outline-none focus:border-[#E91E8C] focus:ring-2 focus:ring-[#E91E8C]/20 transition-all duration-200`}
                 required
+                disabled={loading}
               />
               {errors.phone && <p className="text-[#E91E8C] text-xs mt-1">{errors.phone}</p>}
             </div>
@@ -196,6 +236,7 @@ const Register = () => {
                     errors.password ? 'border-[#E91E8C]' : 'border-[rgba(255,255,255,0.08)]'
                   } rounded-xl px-4 py-3 text-white text-sm placeholder-[#4A3F5E] focus:outline-none focus:border-[#E91E8C] focus:ring-2 focus:ring-[#E91E8C]/20 transition-all duration-200`}
                   required
+                  disabled={loading}
                 />
                 <button
                   type="button"
@@ -233,6 +274,7 @@ const Register = () => {
                     errors.confirmPassword ? 'border-[#E91E8C]' : 'border-[rgba(255,255,255,0.08)]'
                   } rounded-xl px-4 py-3 text-white text-sm placeholder-[#4A3F5E] focus:outline-none focus:border-[#E91E8C] focus:ring-2 focus:ring-[#E91E8C]/20 transition-all duration-200`}
                   required
+                  disabled={loading}
                 />
                 <button
                   type="button"
@@ -263,6 +305,7 @@ const Register = () => {
                 checked={agreeTerms}
                 onChange={(e) => setAgreeTerms(e.target.checked)}
                 className="mt-1 w-4 h-4 rounded border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.05)] text-[#E91E8C] focus:ring-[#E91E8C] focus:ring-offset-0 cursor-pointer"
+                disabled={loading}
               />
               <label htmlFor="terms" className="text-[#6B5F8A] text-xs leading-relaxed cursor-pointer">
                 {text.terms}
@@ -273,9 +316,20 @@ const Register = () => {
             {/* Register Button */}
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-[#E91E8C] to-[#9B2BFF] text-white font-bold py-3.5 rounded-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_8px_30px_rgba(233,30,140,0.3)] active:scale-[0.98] mt-2"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-[#E91E8C] to-[#9B2BFF] text-white font-bold py-3.5 rounded-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_8px_30px_rgba(233,30,140,0.3)] active:scale-[0.98] mt-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              {text.registerBtn}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Creating...
+                </span>
+              ) : (
+                text.registerBtn
+              )}
             </button>
           </form>
 
@@ -286,13 +340,14 @@ const Register = () => {
             <div className="flex-1 h-[1px] bg-[rgba(255,255,255,0.06)]" />
           </div>
 
-          {/* Social Register - Only Google */}
+          {/* Social Register - Google */}
           <div className="space-y-2.5">
             <p className="text-[#4A3F5E] text-xs text-center">{text.socialRegister}</p>
             <div className="flex justify-center">
               <button
                 onClick={handleGoogleRegister}
-                className="w-full max-w-[200px] flex items-center justify-center gap-3 bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.08)] rounded-xl px-6 py-3 transition-all duration-200"
+                disabled={loading}
+                className="w-full max-w-[200px] flex items-center justify-center gap-3 bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.08)] rounded-xl px-6 py-3 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 <svg width="20" height="20" viewBox="0 0 48 48">
                   <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>

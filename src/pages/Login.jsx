@@ -1,12 +1,16 @@
-// pages/Login.jsx (updated with SVG icons instead of emojis)
 import { useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
   const { language } = useLanguage();
+  const { login, loginWithGoogle, error, setError } = useAuth();
+  const navigate = useNavigate();
   const [form, setForm] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [localError, setLocalError] = useState('');
 
   const t = {
     bn: {
@@ -23,6 +27,8 @@ const Login = () => {
       error: 'ইমেইল এবং পাসওয়ার্ড সঠিক নয়',
       emailPlaceholder: 'আপনার ইমেইল লিখুন',
       passwordPlaceholder: 'আপনার পাসওয়ার্ড লিখুন',
+      loginSuccess: 'লগইন সফল!',
+      loginError: 'লগইন ব্যর্থ হয়েছে। আবার চেষ্টা করুন।',
     },
     en: {
       title: 'Welcome Back',
@@ -38,20 +44,44 @@ const Login = () => {
       error: 'Invalid email or password',
       emailPlaceholder: 'Enter your email',
       passwordPlaceholder: 'Enter your password',
+      loginSuccess: 'Login successful!',
+      loginError: 'Login failed. Please try again.',
     }
   };
 
   const text = t[language];
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log('Login attempt:', form);
+    setLocalError('');
+    setLoading(true);
+    setError(null);
+
+    try {
+      await login(form.email, form.password);
+      navigate('/');
+    } catch (err) {
+      setLocalError(text.loginError);
+      console.error('Login error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleGoogleLogin = () => {
-    // Handle Google login logic here
-    console.log('Google login clicked');
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    setLocalError('');
+    setError(null);
+
+    try {
+      await loginWithGoogle();
+      navigate('/');
+    } catch (err) {
+      setLocalError(text.loginError);
+      console.error('Google login error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -82,6 +112,13 @@ const Login = () => {
             <p className="text-[#6B5F8A] text-sm">{text.subtitle}</p>
           </div>
 
+          {/* Error Display */}
+          {(localError || error) && (
+            <div className="mb-4 p-3 bg-[rgba(233,30,140,0.15)] border border-[#E91E8C] rounded-xl text-[#E91E8C] text-sm text-center">
+              {localError || error}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email Input */}
             <div>
@@ -95,6 +132,7 @@ const Login = () => {
                 placeholder={text.emailPlaceholder}
                 className="w-full bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.08)] rounded-xl px-4 py-3 text-white text-sm placeholder-[#4A3F5E] focus:outline-none focus:border-[#E91E8C] focus:ring-2 focus:ring-[#E91E8C]/20 transition-all duration-200"
                 required
+                disabled={loading}
               />
             </div>
 
@@ -116,6 +154,7 @@ const Login = () => {
                   placeholder={text.passwordPlaceholder}
                   className="w-full bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.08)] rounded-xl px-4 py-3 text-white text-sm placeholder-[#4A3F5E] focus:outline-none focus:border-[#E91E8C] focus:ring-2 focus:ring-[#E91E8C]/20 transition-all duration-200"
                   required
+                  disabled={loading}
                 />
                 <button
                   type="button"
@@ -140,9 +179,20 @@ const Login = () => {
             {/* Login Button */}
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-[#E91E8C] to-[#9B2BFF] text-white font-bold py-3.5 rounded-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_8px_30px_rgba(233,30,140,0.3)] active:scale-[0.98]"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-[#E91E8C] to-[#9B2BFF] text-white font-bold py-3.5 rounded-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_8px_30px_rgba(233,30,140,0.3)] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              {text.loginBtn}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Loading...
+                </span>
+              ) : (
+                text.loginBtn
+              )}
             </button>
           </form>
 
@@ -153,13 +203,14 @@ const Login = () => {
             <div className="flex-1 h-[1px] bg-[rgba(255,255,255,0.06)]" />
           </div>
 
-          {/* Social Login - Only Google */}
+          {/* Social Login - Google */}
           <div className="space-y-2.5">
             <p className="text-[#4A3F5E] text-xs text-center">{text.socialLogin}</p>
             <div className="flex justify-center">
               <button
                 onClick={handleGoogleLogin}
-                className="w-full max-w-[200px] flex items-center justify-center gap-3 bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.08)] rounded-xl px-6 py-3 transition-all duration-200"
+                disabled={loading}
+                className="w-full max-w-[200px] flex items-center justify-center gap-3 bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.08)] rounded-xl px-6 py-3 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 <svg width="20" height="20" viewBox="0 0 48 48">
                   <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>

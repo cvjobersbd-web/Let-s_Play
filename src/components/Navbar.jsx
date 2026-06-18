@@ -1,11 +1,12 @@
-// Navbar.jsx (updated with scroll hide/show functionality)
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const { language, toggleLanguage } = useLanguage();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -62,6 +63,30 @@ const Navbar = () => {
   const handleLoginClick = () => {
     navigate('/login');
     setMenuOpen(false);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/');
+      setMenuOpen(false);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
+  const getUserDisplayName = () => {
+    if (user?.displayName) return user.displayName;
+    if (user?.email) return user.email.split('@')[0];
+    return 'User';
+  };
+
+  // Get user avatar - use photoURL from Google if available, otherwise use initial letter
+  const getUserAvatar = () => {
+    if (user?.photoURL) {
+      return user.photoURL;
+    }
+    return null;
   };
 
   return (
@@ -126,12 +151,41 @@ const Navbar = () => {
             </svg>
           </button>
 
-          <button 
-            onClick={handleLoginClick}
-            className="text-[#B0A8C8] hover:text-white text-[15px] font-medium transition-colors duration-200"
-          >
-            {language === 'bn' ? 'লগইন' : 'Login'}
-          </button>
+          {user ? (
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2.5">
+                {/* Avatar with photoURL or fallback */}
+                {getUserAvatar() ? (
+                  <img 
+                    src={getUserAvatar()} 
+                    alt={getUserDisplayName()}
+                    className="w-8 h-8 rounded-full object-cover border-2 border-[rgba(233,30,140,0.3)]"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#E91E8C] to-[#9B2BFF] flex items-center justify-center text-white text-sm font-bold">
+                    {getUserDisplayName().charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <span className="text-white text-sm font-medium max-w-[100px] truncate">
+                  {getUserDisplayName()}
+                </span>
+              </div>
+              <button 
+                onClick={handleLogout}
+                className="text-[#B0A8C8] hover:text-white text-[15px] font-medium transition-colors duration-200"
+              >
+                {language === 'bn' ? 'লগআউট' : 'Logout'}
+              </button>
+            </div>
+          ) : (
+            <button 
+              onClick={handleLoginClick}
+              className="text-[#B0A8C8] hover:text-white text-[15px] font-medium transition-colors duration-200"
+            >
+              {language === 'bn' ? 'লগইন' : 'Login'}
+            </button>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -168,6 +222,28 @@ const Navbar = () => {
           >
             ✕
           </button>
+
+          {/* User info in mobile menu */}
+          {user && (
+            <div className="flex items-center gap-3 px-4 py-3 mb-2 bg-[rgba(255,255,255,0.05)] rounded-xl border border-[rgba(255,255,255,0.06)]">
+              {getUserAvatar() ? (
+                <img 
+                  src={getUserAvatar()} 
+                  alt={getUserDisplayName()}
+                  className="w-10 h-10 rounded-full object-cover border-2 border-[rgba(233,30,140,0.3)] flex-shrink-0"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#E91E8C] to-[#9B2BFF] flex items-center justify-center text-white text-base font-bold flex-shrink-0">
+                  {getUserDisplayName().charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-white text-sm font-medium truncate">{getUserDisplayName()}</p>
+                <p className="text-[#6B5F8A] text-xs truncate">{user.email}</p>
+              </div>
+            </div>
+          )}
 
           <div className="flex flex-col gap-1">
             {links.map((item) => {
@@ -208,12 +284,26 @@ const Navbar = () => {
             </svg>
           </button>
 
-          <button 
-            onClick={handleLoginClick}
-            className="text-[#B0A8C8] hover:text-white text-[20px] font-medium py-3 px-4 rounded-lg transition-all duration-200 hover:bg-[rgba(255,255,255,0.05)] text-left"
-          >
-            {language === 'bn' ? 'লগইন' : 'Login'}
-          </button>
+          {user ? (
+            <button 
+              onClick={handleLogout}
+              className="text-[#B0A8C8] hover:text-white text-[20px] font-medium py-3 px-4 rounded-lg transition-all duration-200 hover:bg-[rgba(255,255,255,0.05)] text-left flex items-center gap-3"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+              {language === 'bn' ? 'লগআউট' : 'Logout'}
+            </button>
+          ) : (
+            <button 
+              onClick={handleLoginClick}
+              className="text-[#B0A8C8] hover:text-white text-[20px] font-medium py-3 px-4 rounded-lg transition-all duration-200 hover:bg-[rgba(255,255,255,0.05)] text-left"
+            >
+              {language === 'bn' ? 'লগইন' : 'Login'}
+            </button>
+          )}
 
           <div className="flex-1" />
           <div className="text-[#4a3f5e] text-xs text-center py-4 border-t border-[rgba(255,255,255,0.04)]">
