@@ -1,9 +1,14 @@
+// Navbar.jsx (updated with scroll hide/show functionality)
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
+import { useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const { language, toggleLanguage } = useLanguage();
+  const navigate = useNavigate();
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
   // Body scroll lock when menu is open
   useEffect(() => {
@@ -17,6 +22,36 @@ const Navbar = () => {
     };
   }, [menuOpen]);
 
+  // Scroll hide/show logic
+  useEffect(() => {
+    const controlNavbar = () => {
+      const currentScrollY = window.scrollY;
+      
+      // Don't hide navbar when menu is open
+      if (menuOpen) {
+        setIsVisible(true);
+        return;
+      }
+
+      // Show navbar when scrolling up or at top
+      if (currentScrollY < lastScrollY || currentScrollY < 50) {
+        setIsVisible(true);
+      } 
+      // Hide navbar when scrolling down and not at top
+      else if (currentScrollY > lastScrollY && currentScrollY > 50) {
+        setIsVisible(false);
+      }
+      
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', controlNavbar, { passive: true });
+    
+    return () => {
+      window.removeEventListener('scroll', controlNavbar);
+    };
+  }, [lastScrollY, menuOpen]);
+
   const navLinks = {
     bn: ['হোম', 'পেজ', 'ব্লগ', 'স্টোর', 'কন্টাক্ট'],
     en: ['Home', 'Pages', 'Blog', 'Store', 'Contacts']
@@ -24,11 +59,20 @@ const Navbar = () => {
 
   const links = navLinks[language];
 
+  const handleLoginClick = () => {
+    navigate('/login');
+    setMenuOpen(false);
+  };
+
   return (
     <>
-      <nav className="flex items-center justify-between bg-[#0F0626] px-6 lg:px-12 h-[72px] relative z-50 border-b border-[rgba(255,255,255,0.05)] font-['Inter']">
+      <nav 
+        className={`fixed top-0 left-0 right-0 flex items-center justify-between bg-[#0F0626] px-6 lg:px-12 h-[72px] z-50 border-b border-[rgba(255,255,255,0.05)] font-['Inter'] transition-transform duration-300 ease-in-out ${
+          isVisible ? 'translate-y-0' : '-translate-y-full'
+        }`}
+      >
         {/* Logo */}
-        <div className="flex items-center gap-2.5 cursor-pointer">
+        <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => navigate('/')}>
           <div className="flex items-center">
             <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
               <circle cx="18" cy="18" r="18" fill="#E91E8C" opacity="0.15" />
@@ -42,7 +86,7 @@ const Navbar = () => {
 
         {/* Nav Links - Desktop */}
         <ul className="hidden lg:flex list-none m-0 p-0 gap-8">
-          {links.map((item, index) => {
+          {links.map((item) => {
             const isHome = (language === 'bn' && item === 'হোম') || (language === 'en' && item === 'Home');
             return (
               <li key={item} className="relative">
@@ -63,18 +107,14 @@ const Navbar = () => {
         </ul>
 
         {/* Right Side - Desktop */}
-        <div className="hidden lg:flex items-center gap-6">
+        <div className="hidden lg:flex items-center gap-8">
           <button
             onClick={toggleLanguage}
-            className="flex items-center gap-2 bg-[rgba(255,255,255,0.06)] hover:bg-[rgba(255,255,255,0.12)] border border-[rgba(255,255,255,0.08)] rounded-full px-3.5 py-2 transition-all duration-300 cursor-pointer group"
+            className="text-[#B0A8C8] hover:text-white text-[15px] font-medium transition-colors duration-200 flex items-center gap-2"
             aria-label="Switch language"
           >
-            <span className="text-lg">
-              {language === 'bn' ? '🇧🇩' : '🇬🇧'}
-            </span>
-            <span className="text-white text-xs font-bold uppercase tracking-wider">
-              {language === 'bn' ? 'বাংলা' : 'English'}
-            </span>
+            <span>{language === 'bn' ? '🇧🇩' : '🇬🇧'}</span>
+            <span>{language === 'bn' ? 'বাংলা' : 'English'}</span>
             <svg
               width="12"
               height="12"
@@ -86,11 +126,11 @@ const Navbar = () => {
             </svg>
           </button>
 
-          <span className="text-white text-base font-bold tracking-[0.5px]">
-            1 800 555 56 57
-          </span>
-          <button className="bg-[#E91E8C] text-white border-none px-6 py-3 rounded-full text-[13px] font-bold tracking-[1.5px] cursor-pointer transition-all duration-300 shadow-[0_4px_20px_rgba(233,30,140,0.3)] hover:bg-[#c4155a] hover:scale-105">
-            {language === 'bn' ? 'যোগাযোগ করুন' : "LET'S TALK"}
+          <button 
+            onClick={handleLoginClick}
+            className="text-[#B0A8C8] hover:text-white text-[15px] font-medium transition-colors duration-200"
+          >
+            {language === 'bn' ? 'লগইন' : 'Login'}
           </button>
         </div>
 
@@ -114,14 +154,13 @@ const Navbar = () => {
         onClick={() => setMenuOpen(false)}
       />
 
-      {/* Mobile Menu - Slide from Right (50% width) */}
+      {/* Mobile Menu */}
       <div 
         className={`fixed top-0 right-0 h-full w-[50%] bg-[#0F0626] shadow-[-8px_0_30px_rgba(0,0,0,0.6)] z-50 lg:hidden transition-transform duration-400 ease-[cubic-bezier(0.22,1,0.36,1)] overflow-y-auto ${
           menuOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
         <div className="flex flex-col p-6 pt-[88px] gap-1 h-full">
-          {/* Close button inside menu */}
           <button
             onClick={() => setMenuOpen(false)}
             className="absolute top-5 right-5 text-white/60 hover:text-white text-2xl transition-colors"
@@ -130,9 +169,8 @@ const Navbar = () => {
             ✕
           </button>
 
-          {/* Navigation Links */}
           <div className="flex flex-col gap-1">
-            {links.map((item, index) => {
+            {links.map((item) => {
               const isHome = (language === 'bn' && item === 'হোম') || (language === 'en' && item === 'Home');
               return (
                 <a
@@ -149,21 +187,15 @@ const Navbar = () => {
             })}
           </div>
 
-          {/* Divider */}
           <div className="w-full h-[1px] bg-[rgba(255,255,255,0.06)] my-4" />
 
-          {/* Mobile Language Switcher */}
           <button
             onClick={toggleLanguage}
-            className="flex items-center justify-between bg-[rgba(255,255,255,0.05)] rounded-full px-4 py-3 border border-[rgba(255,255,255,0.06)] hover:bg-[rgba(255,255,255,0.08)] transition-all duration-200"
+            className="text-[#B0A8C8] hover:text-white text-[20px] font-medium py-3 px-4 rounded-lg transition-all duration-200 hover:bg-[rgba(255,255,255,0.05)] flex items-center justify-between w-full"
           >
             <div className="flex items-center gap-3">
-              <span className="text-lg">
-                {language === 'bn' ? '🇧🇩' : '🇬🇧'}
-              </span>
-              <span className="text-white text-sm font-medium">
-                {language === 'bn' ? 'বাংলা' : 'English'}
-              </span>
+              <span>{language === 'bn' ? '🇧🇩' : '🇬🇧'}</span>
+              <span>{language === 'bn' ? 'বাংলা' : 'English'}</span>
             </div>
             <svg
               width="16"
@@ -176,26 +208,22 @@ const Navbar = () => {
             </svg>
           </button>
 
-          {/* Contact Info */}
-          <div className="mt-4 space-y-3">
-            <span className="text-white text-base font-bold tracking-[0.5px] block px-4">
-              1 800 555 56 57
-            </span>
-            <button 
-              className="bg-[#E91E8C] text-white border-none px-6 py-3.5 rounded-full text-[13px] font-bold tracking-[1.5px] cursor-pointer transition-all duration-300 shadow-[0_4px_20px_rgba(233,30,140,0.3)] hover:bg-[#c4155a] hover:scale-105 w-full"
-              onClick={() => setMenuOpen(false)}
-            >
-              {language === 'bn' ? 'যোগাযোগ করুন' : "LET'S TALK"}
-            </button>
-          </div>
+          <button 
+            onClick={handleLoginClick}
+            className="text-[#B0A8C8] hover:text-white text-[20px] font-medium py-3 px-4 rounded-lg transition-all duration-200 hover:bg-[rgba(255,255,255,0.05)] text-left"
+          >
+            {language === 'bn' ? 'লগইন' : 'Login'}
+          </button>
 
-          {/* Social / Extra space */}
           <div className="flex-1" />
           <div className="text-[#4a3f5e] text-xs text-center py-4 border-t border-[rgba(255,255,255,0.04)]">
             © 2026 Let's Play
           </div>
         </div>
       </div>
+
+      {/* Spacer to prevent content from going under navbar */}
+      <div className="h-[72px]" />
     </>
   );
 };
