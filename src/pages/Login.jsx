@@ -1,4 +1,4 @@
-// pages/Login.jsx
+// pages/Login.jsx (updated with SVG icons instead of emojis)
 import { useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { Link } from 'react-router-dom';
@@ -62,7 +62,7 @@ const Login = () => {
       }}
     >
       <div className="w-full max-w-md">
-        {/* Logo - Hidden on mobile since Navbar has it */}
+        {/* Logo */}
         <div className="flex justify-center mb-8 lg:hidden">
           <div className="flex items-center gap-2.5">
             <svg width="48" height="48" viewBox="0 0 36 36" fill="none">
