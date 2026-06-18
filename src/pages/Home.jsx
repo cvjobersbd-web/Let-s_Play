@@ -35,11 +35,11 @@ const GAMES_PER_PAGE = 10;
 // TICKER
 // ─────────────────────────────────────────────
 const TICKER_ITEMS = [
-  "🎉 রহিম জিতেছেন ৳৪৫,০০০ — Fortune Gems 3",
-  "🔥 করিম জিতেছেন ৳১,২০,০০০ — Gates of Olympus",
-  "💰 সুমাইয়া জিতেছেন ৳৮৮,৫০০ — Sweet Bonanza",
-  "🏆 আরিফ জিতেছেন ৳২,৫০,০০০ — Money Coming",
-  "⚡ নাফিসা জিতেছেন ৳৬৭,০০০ — Aviator",
+  "🎉 মারুফ জিতেছেন ৳৪৫,০০০ — Fortune Gems 3",
+  "🔥 মুন্না জিতেছেন ৳১,২০,০০০ — Gates of Olympus",
+  "💰 ইবতিসাম জিতেছেন ৳৮৮,৫০০ — Sweet Bonanza",
+  "🏆 তাসফিয়া জিতেছেন ৳২,৫০,০০০ — Money Coming",
+  "⚡ ফাহাদ জিতেছেন ৳৬৭,০০০ — Aviator",
 ];
 
 function Ticker() {
