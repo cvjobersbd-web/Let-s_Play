@@ -29,13 +29,6 @@ const GAMES = [
   { id: 20, name: "Dragon Tiger",          provider: "Evolution", image: "https://i.ibb.co.com/bM6hD3SB/unnamed.webp", isNew: true,  multiplier: null,     hot: false },
 ];
 
-const SOCIAL = [
-  { icon: "💬", color: "#25D366", label: "WhatsApp" },
-  { icon: "f",  color: "#1877F2", label: "Facebook" },
-  { icon: "✈️", color: "#0088CC", label: "Telegram" },
-  { icon: "🎧", color: "#E91E8C", label: "Support"  },
-];
-
 const GAMES_PER_PAGE = 10;
 
 // ─────────────────────────────────────────────
@@ -835,50 +828,6 @@ function GamesSection() {
 }
 
 // ─────────────────────────────────────────────
-// FLOATING SOCIAL
-// ─────────────────────────────────────────────
-function FloatingSocial() {
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  return (
-    <div style={{ 
-      position: "fixed", 
-      right: isMobile ? 8 : 14, 
-      top: "50%", 
-      transform: "translateY(-50%)", 
-      display: "flex", 
-      flexDirection: "column", 
-      gap: isMobile ? 6 : 8, 
-      zIndex: 500 
-    }}>
-      {SOCIAL.map(s => (
-        <button key={s.label} title={s.label} style={{
-          width: isMobile ? 36 : 42, 
-          height: isMobile ? 36 : 42, 
-          borderRadius: "50%",
-          background: s.color, border: "none", color: "#fff",
-          fontSize: s.icon === "f" ? (isMobile ? 14 : 18) : (isMobile ? 14 : 16), 
-          fontWeight: 900,
-          cursor: "pointer", boxShadow: `0 4px 16px ${s.color}55`,
-          transition: "transform 0.15s, box-shadow 0.15s",
-          display: "flex", alignItems: "center", justifyContent: "center",
-        }}
-        onMouseEnter={e => { if (window.innerWidth > 768) { e.currentTarget.style.transform = "scale(1.15)"; } }}
-        onMouseLeave={e => { if (window.innerWidth > 768) { e.currentTarget.style.transform = "scale(1)"; } }}>
-          {s.icon}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────
 // MODAL (Login / Register)
 // ─────────────────────────────────────────────
 function Modal({ type, onClose }) {
@@ -1063,7 +1012,6 @@ export default function Home() {
       <Hero />
       <StatsBar />
       <GamesSection />
-      <FloatingSocial />
 
       {modal && <Modal type={modal} onClose={() => setModal(null)} />}
     </div>
