@@ -1,9 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../context/LanguageContext";
 
-// ─────────────────────────────────────────────
-// DATA
-// ─────────────────────────────────────────────
 const PROVIDERS = ["সব", "PG", "BNG", "Pragmatic", "JILI", "SPRIBE", "FC", "Evolution", "MEGA"];
 
 const GAMES = [
